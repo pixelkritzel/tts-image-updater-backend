@@ -1,6 +1,6 @@
 import { types, flow, getSnapshot } from 'mobx-state-tree';
 
-import { userModel, SOuser } from './user';
+import { userModel, SOuser, Isession, Iuser } from './user';
 import { hashPassword } from '../utils/hashPassword';
 import { loadUsers } from '../utils/loadUsers';
 
@@ -12,6 +12,17 @@ const storeModel = types
   .model('store', {
     users: types.map(userModel),
   })
+  .views((self) => ({
+    get activeSessions() {
+      const activeSessions = new Map<Isession['token'], Iuser['name']>();
+      for (const [, user] of self.users) {
+        if (user.session) {
+          activeSessions.set(user.session.token, user.name);
+        }
+      }
+      return activeSessions;
+    },
+  }))
   .actions((self) => ({
     addUser: flow(function* (name: string, password: string) {
       if (self.users.get(name)) {

@@ -1,3 +1,4 @@
+import { logout } from './api/logout';
 import { login } from './api/login';
 import { signup } from './api/signup';
 import express from 'express';
@@ -13,6 +14,7 @@ app.get('/', (req, res) => {
 
 app.use('/signup', signup);
 app.use('/login', login);
+app.use('/logout', logout);
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
