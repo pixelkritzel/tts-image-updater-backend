@@ -1,4 +1,4 @@
-import { types, flow, getSnapshot } from 'mobx-state-tree';
+import { types, flow } from 'mobx-state-tree';
 import fsWithCallbacks from 'fs';
 
 import { userModel, SOuser, Isession, Iuser } from './user';

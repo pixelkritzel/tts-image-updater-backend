@@ -1,6 +1,7 @@
-import { store } from './../store/store';
 import express from 'express';
-import bodyParser from 'body-parser';
+
+import { store } from './../store/store';
+
 export const router = express.Router();
 
 export const signup = router.post('/', async (req, res) => {

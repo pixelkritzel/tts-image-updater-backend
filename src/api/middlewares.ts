@@ -1,12 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
+
 import { store } from '../store';
 
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
-  const { userName: userNameFromParams } = req.params;
+  const { username: usernameFromParams } = req.params;
   const sessiontoken = req.headers['session-token'];
   const sessionByToken = store.activeSessions.get(sessiontoken as string);
   if (typeof sessiontoken === 'string' && sessionByToken) {
-    if (userNameFromParams === sessionByToken.username && Date.now() < sessionByToken.expires) {
+    if (usernameFromParams === sessionByToken.username && Date.now() < sessionByToken.expires) {
       store.users.get(sessionByToken.username)?.session!.updateExpires();
       return next();
     }
@@ -16,18 +17,18 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
 }
 
 export async function resolveUser(req: Request, res: Response, next: NextFunction) {
-  const { userName } = req.params;
-  if (userName) {
-    const user = store.users.get(userName);
+  const { username } = req.params;
+  if (username) {
+    const user = store.users.get(username);
     if (!user) {
       res.statusCode = 404;
-      res.send(`Didn't find user ${userName}`);
+      res.send(`Didn't find user ${username}`);
     } else {
       req.user = user;
       next();
     }
   } else {
-    throw new Error('resolveUser middleware was used without a :userName in the route');
+    throw new Error('resolveUser middleware was used without a :username in the route');
   }
 }
 

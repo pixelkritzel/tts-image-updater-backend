@@ -1,27 +1,24 @@
-import {
-  types,
-  SnapshotOut,
-  getSnapshot,
-  flow,
-  Instance,
-  onSnapshot,
-  typecheck,
-} from 'mobx-state-tree';
+import { types, SnapshotOut, getSnapshot, flow, Instance, onSnapshot } from 'mobx-state-tree';
 import fsWithCallbacks from 'fs';
-
 import { compare } from 'bcrypt';
 import { v4 as uuid4 } from 'uuid';
 
-import { imageSetModel } from './imageSet';
 import { isSnapshot } from '../utils/isSnapshot';
-import { storeResponse } from './storeResponse';
 import { getUserDataPath } from '../utils/getUserDataPath';
+
+import { imageSetModel } from './imageSet';
+import { storeResponse } from './storeResponse';
 
 const fs = fsWithCallbacks.promises;
 
 async function saveUserSnapshot(snapshot: SOuser) {
   const userPath = getUserDataPath(snapshot.name);
   fs.writeFile(userPath, JSON.stringify(snapshot, undefined, 4), 'utf-8');
+}
+
+function getExpires(): number {
+  const SEVEN_DAYS_IN_MILLISECONDS = 86400000 + 7;
+  return Date.now() + SEVEN_DAYS_IN_MILLISECONDS;
 }
 
 const sessionModel = types
@@ -80,7 +77,6 @@ export const userModel = types
     },
     login: (flow(function* (password: string) {
       if (yield compare(password, self.pwHash)) {
-        const now = Date.now();
         self.session = sessionModel.create({
           expires: getExpires(),
           token: uuid4(),
@@ -97,8 +93,3 @@ export const userModel = types
 
 export type Iuser = Instance<typeof userModel>;
 export type SOuser = SnapshotOut<typeof userModel>;
-
-function getExpires(): number {
-  const SEVEN_DAYS_IN_MILLISECONDS = 86400000 + 7;
-  return Date.now() + SEVEN_DAYS_IN_MILLISECONDS;
-}

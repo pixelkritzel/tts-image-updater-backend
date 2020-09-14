@@ -1,7 +1,9 @@
-import { storeResponse } from './storeResponse';
 import { SnapshotIn, types, Instance, getSnapshot, applySnapshot } from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
+
 import { isSnapshot } from '../utils/isSnapshot';
+
+import { storeResponse } from './storeResponse';
 
 const imageModel = types.model({
   id: types.optional(types.identifier, uuid4),
@@ -83,6 +85,7 @@ export const imageSetModel = types
     ): storeResponse {
       if (self.images.has(imageId)) {
         self[which] = imageId;
+        self.isDirty = true;
         return { type: 'SUCCESS', data: self.images.get(imageId) };
       } else {
         return {

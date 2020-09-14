@@ -2,29 +2,30 @@ import { getSnapshot } from 'mobx-state-tree';
 import express from 'express';
 
 import { store } from './../store/store';
-import { authenticateUser, resolveImage, resolveImageSet, resolveUser } from './middlewares';
 import { getJson } from '../utils/getJson';
+
+import { authenticateUser, resolveImage, resolveImageSet, resolveUser } from './middlewares';
 
 const users = express.Router();
 
-users.use('/:userName', authenticateUser);
-users.use('/:userName', resolveUser);
-users.use('/:userName/image-sets/:imageSetId', resolveImageSet);
-users.use('/:userName/image-sets/:imageSetId/images/:imageId', resolveImage);
+users.use('/:username', authenticateUser);
+users.use('/:username', resolveUser);
+users.use('/:username/image-sets/:imageSetId', resolveImageSet);
+users.use('/:username/image-sets/:imageSetId/images/:imageId', resolveImage);
 
-users.get('/:userName', (req, res) => {
+users.get('/:username', (req, res) => {
   const userSnapShot = { ...(getSnapshot(req.user!) as any) };
   delete userSnapShot.pwHash;
   delete userSnapShot.session;
   res.send(JSON.stringify(userSnapShot));
 });
 
-users.delete('/:userName', (req, res) => {
+users.delete('/:username', (req, res) => {
   store.deleteUser(req.user!);
   res.send();
 });
 
-users.post('/:userName/image-sets', async (req, res) => {
+users.post('/:username/image-sets', async (req, res) => {
   const response = req.user!.addImageSet(req.body);
   if (response.type === 'SUCCESS') {
     res.send(response.data);
@@ -34,19 +35,19 @@ users.post('/:userName/image-sets', async (req, res) => {
   }
 });
 
-users.get('/:userName/image-sets/', async (req, res) => {
+users.get('/:username/image-sets/', async (req, res) => {
   res.send(getJson(req.user!.imageSets));
 });
 
-users.get('/:userName/image-sets/:imageSetId', async (req, res) => {
+users.get('/:username/image-sets/:imageSetId', async (req, res) => {
   res.send(getJson(req.imageSet!));
 });
 
-users.delete('/:userName/image-sets/:imageSetId', async (req, res) => {
+users.delete('/:username/image-sets/:imageSetId', async (req, res) => {
   req.user!.deleteImageSet(req.params.imageSetId);
 });
 
-users.put('/:userName/image-sets/:imageSetId', async (req, res) => {
+users.put('/:username/image-sets/:imageSetId', async (req, res) => {
   const response = req.imageSet!.update(req.body);
   if (response.type === 'SUCCESS') {
     res.send(getJson(response.data));
@@ -55,7 +56,7 @@ users.put('/:userName/image-sets/:imageSetId', async (req, res) => {
   }
 });
 
-users.post('/:userName/image-sets/:imageSetId/images', async (req, res) => {
+users.post('/:username/image-sets/:imageSetId/images', async (req, res) => {
   const response = req.imageSet!.addImage(req.body);
   if (response.type === 'SUCCESS') {
     res.send(response.data);
@@ -65,11 +66,11 @@ users.post('/:userName/image-sets/:imageSetId/images', async (req, res) => {
   }
 });
 
-users.get('/:userName/image-sets/:imageSetId/images/:imageId', async (req, res) => {
+users.get('/:username/image-sets/:imageSetId/images/:imageId', async (req, res) => {
   res.send(getJson(req.image!));
 });
 
-users.delete('/:userName/image-sets/:imageSetId/images/:imageId', async (req, res) => {
+users.delete('/:username/image-sets/:imageSetId/images/:imageId', async (req, res) => {
   req.imageSet!.deleteImage(req.image!);
   res.send();
 });

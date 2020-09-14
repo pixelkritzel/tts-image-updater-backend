@@ -1,5 +1,6 @@
-import { store } from './../store/store';
 import express from 'express';
+
+import { store } from './../store/store';
 
 export const router = express.Router();
 
@@ -14,7 +15,7 @@ export const login = router.post('/', async (req, res) => {
         res.send(result.message);
       } else {
         res.header({
-          sessionToken: user.session!.token,
+          ['session-token']: user.session!.token,
         });
         res.send(result.message);
       }
