@@ -3,10 +3,9 @@ import { types, flow, getSnapshot } from 'mobx-state-tree';
 import { userModel, SOuser, Isession, Iuser } from './user';
 import { hashPassword } from '../utils/hashPassword';
 import { loadUsers } from '../utils/loadUsers';
+import { storeResponse } from './storeResponse';
 
 const storeData = require('../../data/store.json');
-
-type storeResponse = { type: 'ERROR'; message: string } | { type: 'SUCCESS'; message: string };
 
 const storeModel = types
   .model('store', {
