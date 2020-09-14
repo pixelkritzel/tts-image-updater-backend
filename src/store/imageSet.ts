@@ -1,6 +1,7 @@
 import { storeResponse } from './storeResponse';
-import { SnapshotIn, types, Instance, SnapshotOut } from 'mobx-state-tree';
+import { SnapshotIn, types, Instance, getSnapshot, applySnapshot } from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
+import { isSnapshot } from '../utils/isSnapshot';
 
 const imageModel = types.model({
   id: types.optional(types.identifier, uuid4),
@@ -8,6 +9,7 @@ const imageModel = types.model({
   name: types.optional(types.string, ''),
 });
 
+export type Iimage = Instance<typeof imageModel>;
 type SIimageModel = SnapshotIn<typeof imageModel>;
 
 const imageModelMap = types.map(imageModel);
@@ -55,12 +57,38 @@ export const imageSetModel = types
     },
   }))
   .actions((self) => ({
-    setSelectedImageId(selectedImageId: string): storeResponse {
-      if (self.images.has(selectedImageId)) {
-        self.selectedImageId = selectedImageId;
-        return { type: 'SUCCESS' };
+    addImage(imageData: unknown): storeResponse {
+      if (isSnapshot<typeof imageModel>(imageModel, imageData)) {
+        const imageInstance = imageModel.create(imageData);
+        self.images.set(imageInstance.id, imageInstance);
+        return { type: 'SUCCESS', data: getSnapshot(imageInstance) };
+      }
+      return { type: 'ERROR' };
+    },
+    deleteImage(image: Iimage) {
+      self.images.delete(image.id);
+    },
+    update(snapshot: unknown): storeResponse {
+      try {
+        applySnapshot(self, snapshot);
+        return { type: 'SUCCESS', data: self };
+      } catch (e) {
+        console.log(e);
+        return { type: 'ERROR', data: e };
+      }
+    },
+    setSelectedOrDefaultImageId(
+      imageId: string,
+      which: 'selectedImageId' | 'defaultImageId'
+    ): storeResponse {
+      if (self.images.has(imageId)) {
+        self[which] = imageId;
+        return { type: 'SUCCESS', data: self.images.get(imageId) };
       } else {
-        return { type: 'ERROR' };
+        return {
+          type: 'ERROR',
+          message: `Imageset ${self.id} doesn't contain image ${imageId}`,
+        };
       }
     },
   }));

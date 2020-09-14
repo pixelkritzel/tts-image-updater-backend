@@ -7,31 +7,33 @@ import {
   onSnapshot,
   typecheck,
 } from 'mobx-state-tree';
-import path from 'path';
 import fsWithCallbacks from 'fs';
 
-import filenamify from 'filenamify';
 import { compare } from 'bcrypt';
 import { v4 as uuid4 } from 'uuid';
 
-import { imageSetModel, IimageSet } from './imageSet';
+import { imageSetModel } from './imageSet';
 import { isSnapshot } from '../utils/isSnapshot';
 import { storeResponse } from './storeResponse';
-import { setSyntheticLeadingComments } from 'typescript';
+import { getUserDataPath } from '../utils/getUserDataPath';
 
 const fs = fsWithCallbacks.promises;
 
-const ONE_DAY_IN_MILLISECONDS = 86400000;
-
 async function saveUserSnapshot(snapshot: SOuser) {
-  const userPath = path.resolve(process.cwd(), `./data/users/${filenamify(snapshot.name)}.json`);
+  const userPath = getUserDataPath(snapshot.name);
   fs.writeFile(userPath, JSON.stringify(snapshot, undefined, 4), 'utf-8');
 }
 
-const sessionModel = types.model('session', {
-  expires: types.number,
-  token: types.string,
-});
+const sessionModel = types
+  .model('session', {
+    expires: types.number,
+    token: types.string,
+  })
+  .actions((self) => ({
+    updateExpires() {
+      self.expires = getExpires();
+    },
+  }));
 
 export type Isession = Instance<typeof sessionModel>;
 
@@ -59,7 +61,7 @@ export const userModel = types
     };
   })
   .actions((self) => ({
-    createImageSet(imageSet: unknown): storeResponse {
+    addImageSet(imageSet: unknown): storeResponse {
       if (
         isSnapshot<typeof imageSetModel>(imageSetModel, imageSet) &&
         imageSet.images &&
@@ -79,10 +81,10 @@ export const userModel = types
     login: (flow(function* (password: string) {
       if (yield compare(password, self.pwHash)) {
         const now = Date.now();
-        self.session = {
-          expires: now + ONE_DAY_IN_MILLISECONDS * 7,
+        self.session = sessionModel.create({
+          expires: getExpires(),
           token: uuid4(),
-        };
+        });
         return { type: 'SUCCESS', data: {} };
       } else {
         return { type: 'ERROR', message: 'Wrong password' };
@@ -95,3 +97,8 @@ export const userModel = types
 
 export type Iuser = Instance<typeof userModel>;
 export type SOuser = SnapshotOut<typeof userModel>;
+
+function getExpires(): number {
+  const SEVEN_DAYS_IN_MILLISECONDS = 86400000 + 7;
+  return Date.now() + SEVEN_DAYS_IN_MILLISECONDS;
+}
