@@ -1,11 +1,9 @@
-import { SnapshotIn, types, Instance, getSnapshot, applySnapshot } from 'mobx-state-tree';
+import { SnapshotIn, types, Instance, getSnapshot, applyPatch, IJsonPatch } from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
-
-import { isSnapshot } from '../utils/isSnapshot';
 
 import { storeResponse } from './storeResponse';
 
-const imageModel = types.model({
+export const imageModel = types.model({
   id: types.optional(types.identifier, uuid4),
   url: types.string,
   name: types.optional(types.string, ''),
@@ -59,20 +57,16 @@ export const imageSetModel = types
     },
   }))
   .actions((self) => ({
-    addImage(imageData: unknown): storeResponse {
-      if (isSnapshot<typeof imageModel>(imageModel, imageData)) {
-        const imageInstance = imageModel.create(imageData);
-        self.images.set(imageInstance.id, imageInstance);
-        return { type: 'SUCCESS', data: getSnapshot(imageInstance) };
-      }
-      return { type: 'ERROR' };
+    addImage(image: Iimage) {
+      self.images.set(image.id, image);
+      return getSnapshot(self);
     },
     deleteImage(image: Iimage) {
       self.images.delete(image.id);
     },
-    update(snapshot: unknown): storeResponse {
+    update(patch: IJsonPatch): storeResponse {
       try {
-        applySnapshot(self, snapshot);
+        applyPatch(self, patch);
         return { type: 'SUCCESS', data: self };
       } catch (e) {
         console.log(e);

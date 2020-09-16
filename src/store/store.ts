@@ -1,8 +1,8 @@
 import { types, flow } from 'mobx-state-tree';
 import fsWithCallbacks from 'fs';
 
-import { userModel, SOuser, Isession, Iuser } from './user';
-import { hashPassword } from '../utils/hashPassword';
+import { userModel, Isession, Iuser, SIuser } from './user';
+import { hash } from '../utils/hashPassword';
 import { loadUsers } from '../utils/loadUsers';
 import { storeResponse } from './storeResponse';
 import { getUserDataPath } from '../utils/getUserDataPath';
@@ -53,7 +53,7 @@ const storeModel = types
     }
 
     const afterCreate = flow(function* () {
-      const users = (yield loadUsers()) as SOuser[];
+      const users: SIuser[] = yield loadUsers();
       users.forEach((user) => self.users.set(user.name, user));
       cleanupSessionsIntervalId = setInterval(cleanupExpiredSessions, 5 * 60 * 1000);
     });
@@ -69,12 +69,12 @@ const storeModel = types
   .actions((self) => ({
     addUser: flow(function* (name: string, password: string) {
       if (self.users.get(name)) {
-        return { type: 'ERROR', message: 'User already exists' };
+        return { type: 'ERROR', message: 'User already exists' } as storeResponse;
       }
-      const pwHash = (yield hashPassword(password)) as string;
+      const pwHash = (yield hash(password)) as string;
       self.users.set(name, userModel.create({ name, pwHash }));
-      return { type: 'SUCCESS', message: 'User created' };
-    }) as (name: string, password: string) => Promise<storeResponse>,
+      return { type: 'SUCCESS', message: 'User created' } as storeResponse;
+    }),
 
     deleteUser(user: Iuser) {
       deleteUserData(user.name);

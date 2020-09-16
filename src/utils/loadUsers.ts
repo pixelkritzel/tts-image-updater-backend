@@ -1,9 +1,10 @@
 import fsWithCallbacks from 'fs';
 import path from 'path';
+import { SIuser } from '../store/user';
 
 const fs = fsWithCallbacks.promises;
 
-export async function loadUsers() {
+export async function loadUsers(): Promise<SIuser[]> {
   const usersDirectory = path.resolve(process.cwd(), `./data/users`);
   const usersPaths = (await fs.readdir(usersDirectory))
     .filter((fileName) => fileName.endsWith('.json'))

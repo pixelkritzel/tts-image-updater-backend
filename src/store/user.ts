@@ -1,4 +1,12 @@
-import { types, SnapshotOut, getSnapshot, flow, Instance, onSnapshot } from 'mobx-state-tree';
+import {
+  types,
+  SnapshotOut,
+  getSnapshot,
+  flow,
+  Instance,
+  onSnapshot,
+  SnapshotIn,
+} from 'mobx-state-tree';
 import fsWithCallbacks from 'fs';
 import { compare } from 'bcrypt';
 import { v4 as uuid4 } from 'uuid';
@@ -37,6 +45,7 @@ export type Isession = Instance<typeof sessionModel>;
 export const userModel = types
   .model('user', {
     name: types.identifier,
+    imageDirectory: uuid4(),
     pwHash: types.string,
     session: types.maybe(sessionModel),
     imageSets: types.map(imageSetModel),
@@ -75,21 +84,22 @@ export const userModel = types
     deleteImageSet(imageSetId: string) {
       self.imageSets.delete(imageSetId);
     },
-    login: (flow(function* (password: string) {
+    login: flow(function* (password: string) {
       if (yield compare(password, self.pwHash)) {
         self.session = sessionModel.create({
           expires: getExpires(),
           token: uuid4(),
         });
-        return { type: 'SUCCESS', data: {} };
+        return { type: 'SUCCESS', data: {} } as storeResponse;
       } else {
-        return { type: 'ERROR', message: 'Wrong password' };
+        return { type: 'ERROR', message: 'Wrong password' } as storeResponse;
       }
-    }) as unknown) as (pw: string) => storeResponse,
+    }),
     logout() {
       self.session = undefined;
     },
   }));
 
 export type Iuser = Instance<typeof userModel>;
+export type SIuser = SnapshotIn<typeof userModel>;
 export type SOuser = SnapshotOut<typeof userModel>;
