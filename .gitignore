@@ -1,5 +1,7 @@
 node_modules/
 dist/
 data/users/*.json
+images/*
+!images/.gitkeep
 
 yarn-error.log

@@ -1,4 +1,12 @@
-import { SnapshotIn, types, Instance, getSnapshot, applyPatch, IJsonPatch } from 'mobx-state-tree';
+import {
+  SnapshotIn,
+  types,
+  Instance,
+  getSnapshot,
+  applyPatch,
+  IJsonPatch,
+  cast,
+} from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
 
 import { storeResponse } from './storeResponse';
@@ -36,6 +44,7 @@ export const imageSetModel = types
     ),
     defaultImageId: types.optional(types.string, ''),
     selectedImageId: types.optional(types.string, ''),
+    temporaryImageData: types.maybe(types.array(types.frozen())),
   })
   .volatile((self) => ({
     isDirty: false,
@@ -57,9 +66,26 @@ export const imageSetModel = types
     },
   }))
   .actions((self) => ({
-    addImage(image: Iimage) {
-      self.images.set(image.id, image);
+    addImages(newImages: SIimageModel[]) {
+      newImages.forEach((image, index) => {
+        const id = uuid4();
+        self.images.set(id, { id, ...image });
+        if (index === 0) {
+          self.selectedImageId = id;
+        }
+      });
+
       return getSnapshot(self);
+    },
+    addTemporaryImageData(image: SIimageModel) {
+      if (self.temporaryImageData) {
+        self.temporaryImageData.push(image);
+      } else {
+        self.temporaryImageData = cast([image]);
+      }
+    },
+    resetTemporaryImageData() {
+      self.temporaryImageData = undefined;
     },
     deleteImage(image: Iimage) {
       self.images.delete(image.id);

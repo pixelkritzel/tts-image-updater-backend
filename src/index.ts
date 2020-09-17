@@ -10,10 +10,10 @@ import { signup } from './api/signup';
 
 import { exclude } from './utils/exclude';
 
+dotenv.config();
+
 const app = express();
 const port = 3000;
-
-dotenv.config();
 
 app.use(express.urlencoded());
 app.use(express.json());

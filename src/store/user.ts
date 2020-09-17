@@ -21,7 +21,10 @@ const fs = fsWithCallbacks.promises;
 
 async function saveUserSnapshot(snapshot: SOuser) {
   const userPath = getUserDataPath(snapshot.name);
-  fs.writeFile(userPath, JSON.stringify(snapshot, undefined, 4), 'utf-8');
+  if (fsWithCallbacks.existsSync(userPath)) {
+    await fs.unlink(userPath);
+  }
+  await fs.writeFile(userPath, JSON.stringify(snapshot, undefined, 4), 'utf-8');
 }
 
 function getExpires(): number {

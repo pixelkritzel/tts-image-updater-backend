@@ -1,4 +1,3 @@
-import { imageModel } from './../store/imageSet';
 import { getSnapshot } from 'mobx-state-tree';
 import express from 'express';
 import multer from 'multer';
@@ -75,18 +74,21 @@ var storage = multer.diskStorage({
     const fileExtension = path.extname(file.originalname);
     const uuid = uuid4();
     const fileName = uuid + fileExtension;
-    req.image = imageModel.create({
-      url: `http://localhost:3000/images/${req.user?.imageDirectory}/${fileName}`,
-    });
+    const url = `${process.env.BASE_URL}/images/${req.user?.imageDirectory}/${fileName}`;
+    req.imageSet!.addTemporaryImageData({ url });
     cb(null, fileName);
   },
 });
 
 var upload = multer({ storage });
 
-users.post('/:username/image-sets/:imageSetId/images', upload.single('image'), async (req, res) => {
-  const newImage = req.imageSet?.addImage(req.image!);
-  res.send(newImage);
+users.post('/:username/image-sets/:imageSetId/images', upload.array('images'), async (req, res) => {
+  const { imageSet } = req;
+  if (imageSet!.temporaryImageData) {
+    const newImage = imageSet?.addImages(imageSet!.temporaryImageData);
+    imageSet?.resetTemporaryImageData();
+    res.send(newImage);
+  }
 });
 
 users.get('/:username/image-sets/:imageSetId/images/:imageId', async (req, res) => {
