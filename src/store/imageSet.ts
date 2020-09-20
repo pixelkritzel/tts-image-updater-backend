@@ -8,6 +8,7 @@ import {
   cast,
 } from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
+import { runImageSetSideEffects } from './runImageSetPatchSideEffects';
 
 import { storeResponse } from './storeResponse';
 
@@ -93,6 +94,7 @@ export const imageSetModel = types
     update(patch: IJsonPatch): storeResponse {
       try {
         applyPatch(self, patch);
+        runImageSetSideEffects(self as any, patch);
         return { type: 'SUCCESS', data: self };
       } catch (e) {
         console.log(e);
@@ -116,5 +118,5 @@ export const imageSetModel = types
     },
   }));
 
-export type IimageSet = Instance<typeof imageSetModel>;
-export type SIimageSet = SnapshotIn<typeof imageSetModel>;
+export interface IimageSet extends Instance<typeof imageSetModel> {}
+export interface SIimageSet extends SnapshotIn<typeof imageSetModel> {}
