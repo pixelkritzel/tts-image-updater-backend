@@ -6,6 +6,8 @@ import {
   applyPatch,
   IJsonPatch,
   cast,
+  onPatch,
+  IDisposer,
 } from 'mobx-state-tree';
 import { v4 as uuid4 } from 'uuid';
 import { runImageSetSideEffects } from './runImageSetPatchSideEffects';
@@ -62,11 +64,6 @@ export const imageSetModel = types
     },
   }))
   .actions((self) => ({
-    afterCreate() {
-      self.defaultImageId = [...self.images.values()][0].id;
-    },
-  }))
-  .actions((self) => ({
     addImages(newImages: SIimageModel[]) {
       newImages.forEach((image, index) => {
         const id = uuid4();
@@ -101,6 +98,10 @@ export const imageSetModel = types
         return { type: 'ERROR', data: e };
       }
     },
+
+    setIsDirty(isDirty: boolean) {
+      self.isDirty = isDirty;
+    },
     setSelectedOrDefaultImageId(
       imageId: string,
       which: 'selectedImageId' | 'defaultImageId'
@@ -116,7 +117,27 @@ export const imageSetModel = types
         };
       }
     },
-  }));
+  }))
+  .actions((self) => {
+    const disposers: IDisposer[] = [];
+    function afterCreate() {
+      self.defaultImageId = [...self.images.values()][0].id;
+      disposers.push(
+        onPatch(self, (patch) => {
+          if (patch.op === 'replace' && patch.path === '/selectedImageId') {
+            self.setIsDirty(true);
+          }
+        })
+      );
+    }
+
+    function beforeDestroy() {
+      disposers.forEach((disposerFn) => disposerFn());
+    }
+    return {
+      afterCreate,
+    };
+  });
 
 export interface IimageSet extends Instance<typeof imageSetModel> {}
 export interface SIimageSet extends SnapshotIn<typeof imageSetModel> {}

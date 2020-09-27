@@ -14,7 +14,7 @@ const fs = fsOld.promises;
 
 const users = express.Router();
 
-// users.use('/:username', authenticateUser);
+users.use('/:username', authenticateUser);
 users.use('/:username', resolveUser);
 users.use('/:username/image-sets/:imageSetId', resolveImageSet);
 users.use('/:username/image-sets/:imageSetId/images/:imageId', resolveImage);

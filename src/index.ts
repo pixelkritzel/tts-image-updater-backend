@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
 
+import { connection } from './api/connection';
 import { users } from './api/users';
 import { logout } from './api/logout';
 import { login } from './api/login';
@@ -19,7 +20,7 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(cors());
 app.use(
-  exclude('/images', (req, res, next) => {
+  exclude(['/images', '/connection'], (req, res, next) => {
     res.setHeader('content-type', 'application/json');
     next();
   })
@@ -31,6 +32,7 @@ app.use('/signup', signup);
 app.use('/login', login);
 app.use('/logout', logout);
 app.use('/users', users);
+app.use('/connection', connection);
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);

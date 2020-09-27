@@ -1,3 +1,4 @@
+import { IimageSet } from './imageSet';
 import { types, flow } from 'mobx-state-tree';
 import fsWithCallbacks from 'fs';
 
@@ -34,6 +35,18 @@ const storeModel = types
         }
       }
       return activeSessions;
+    },
+
+    getImageSetById(imageSetId: string) {
+      let imageSet: IimageSet | undefined;
+      self.users.forEach((user) => {
+        user.imageSets.forEach((currentImageSet) => {
+          if (currentImageSet.id === imageSetId) {
+            imageSet = currentImageSet;
+          }
+        });
+      });
+      return imageSet;
     },
   }))
   .actions((self) => {
