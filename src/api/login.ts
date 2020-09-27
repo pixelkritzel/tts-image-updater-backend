@@ -14,10 +14,7 @@ export const login = router.post('/', async (req, res) => {
         res.statusCode = 401;
         res.send(result.message);
       } else {
-        res.header({
-          ['session-token']: user.session!.token,
-        });
-        res.send(result.message);
+        res.send({message: result.message, token: user.session!.token});
       }
     } else {
       res.statusCode = 401;
