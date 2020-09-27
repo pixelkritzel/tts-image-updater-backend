@@ -12,9 +12,9 @@ import { signup } from './api/signup';
 import { exclude } from './utils/exclude';
 
 dotenv.config();
-
+const port = process.env.PORT
 const app = express();
-const port = 3000;
+
 
 app.use(express.urlencoded());
 app.use(express.json());
@@ -35,5 +35,5 @@ app.use('/users', users);
 app.use('/connection', connection);
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`TTS Auto Updater listening at http://localhost:${port}`);
 });
