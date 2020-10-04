@@ -71,11 +71,7 @@ export const userModel = types
   })
   .actions((self) => ({
     addImageSet(imageSet: unknown): storeResponse {
-      if (
-        isSnapshot<typeof imageSetModel>(imageSetModel, imageSet) &&
-        imageSet.images &&
-        imageSet.images.length > 0
-      ) {
+      if (isSnapshot<typeof imageSetModel>(imageSetModel, imageSet)) {
         const id = uuid4();
         const imageSetInstance = imageSetModel.create({ id, ...imageSet });
         self.imageSets.set(id, imageSetInstance);

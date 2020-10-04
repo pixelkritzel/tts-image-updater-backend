@@ -23,14 +23,12 @@ export const imageModel = types.model({
 export type Iimage = Instance<typeof imageModel>;
 type SIimageModel = SnapshotIn<typeof imageModel>;
 
-const imageModelMap = types.map(imageModel);
-
 export const imageSetModel = types
   .model({
     id: types.optional(types.identifier, uuid4),
     name: types.optional(types.string, ''),
     images: types.snapshotProcessor(
-      imageModelMap,
+      types.map(imageModel),
       {
         preProcessor(sn: SIimageModel[]) {
           return sn.reduce((accu, curr) => {
@@ -121,7 +119,6 @@ export const imageSetModel = types
   .actions((self) => {
     const disposers: IDisposer[] = [];
     function afterCreate() {
-      self.defaultImageId = [...self.images.values()][0].id;
       disposers.push(
         onPatch(self, (patch) => {
           if (patch.op === 'replace' && patch.path === '/selectedImageId') {

@@ -4,7 +4,7 @@ import cors from 'cors';
 import path from 'path';
 
 import { connection } from './api/connection';
-import { users } from './api/users';
+import { users } from './api/usersApi';
 import { logout } from './api/logout';
 import { login } from './api/login';
 import { signup } from './api/signup';
@@ -12,9 +12,8 @@ import { signup } from './api/signup';
 import { exclude } from './utils/exclude';
 
 dotenv.config();
-const port = process.env.PORT
+const port = process.env.PORT;
 const app = express();
-
 
 app.use(express.urlencoded());
 app.use(express.json());

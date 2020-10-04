@@ -5,7 +5,7 @@ import fsOld from 'fs';
 import path from 'path';
 import { v4 as uuid4 } from 'uuid';
 
-import { store } from './../store/store';
+import { store } from '../store/store';
 import { getJson } from '../utils/getJson';
 
 import { authenticateUser, resolveImage, resolveImageSet, resolveUser } from './middlewares';
@@ -31,18 +31,18 @@ users.delete('/:username', (req, res) => {
   res.send();
 });
 
+users.get('/:username/image-sets/', async (req, res) => {
+  res.send(getJson(req.user!.imageSets));
+});
+
 users.post('/:username/image-sets', async (req, res) => {
-  const response = req.user!.addImageSet(req.body);
+  const response = req.user!.addImageSet({ images: [] });
   if (response.type === 'SUCCESS') {
     res.send(response.data);
   } else {
     res.statusCode = 422;
     res.send(response.message);
   }
-});
-
-users.get('/:username/image-sets/', async (req, res) => {
-  res.send(getJson(req.user!.imageSets));
 });
 
 users.get('/:username/image-sets/:imageSetId', async (req, res) => {
