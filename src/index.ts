@@ -34,5 +34,5 @@ app.use('/users', users);
 app.use('/connection', connection);
 
 app.listen(port, () => {
-  console.log(`TTS Auto Updater listening at http://localhost:${port}`);
+  console.log(`TTS Auto Updater listening at http://0.0.0.0:${port}`);
 });
