@@ -33,6 +33,6 @@ app.use('/logout', logout);
 app.use('/users', users);
 app.use('/connection', connection);
 
-app.listen(port, () => {
+app.listen(Number(port), '0.0.0.0', () => {
   console.log(`TTS Auto Updater listening at http://0.0.0.0:${port}`);
 });
