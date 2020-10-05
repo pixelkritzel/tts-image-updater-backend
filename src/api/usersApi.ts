@@ -51,6 +51,7 @@ users.get('/:username/image-sets/:imageSetId', async (req, res) => {
 
 users.delete('/:username/image-sets/:imageSetId', async (req, res) => {
   req.user!.deleteImageSet(req.params.imageSetId);
+  res.send();
 });
 
 users.put('/:username/image-sets/:imageSetId', async (req, res) => {
