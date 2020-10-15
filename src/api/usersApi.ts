@@ -1,13 +1,11 @@
-import { getSnapshot } from 'mobx-state-tree';
 import express from 'express';
 import multer from 'multer';
 import fsOld from 'fs';
 import path from 'path';
 import { v4 as uuid4 } from 'uuid';
 
-import { store } from '../store/store';
-import { getJson } from '../utils/getJson';
-
+import { Image } from './../entity/Image';
+import { ImageSet } from './../entity/ImageSet';
 import { authenticateUser, resolveImage, resolveImageSet, resolveUser } from './middlewares';
 
 const fs = fsOld.promises;
@@ -19,64 +17,59 @@ users.use('/:username', resolveUser);
 users.use('/:username/image-sets/:imageSetId', resolveImageSet);
 users.use('/:username/image-sets/:imageSetId/images/:imageId', resolveImage);
 
-users.get('/:username', (req, res) => {
-  const userSnapShot = { ...(getSnapshot(req.user!) as any) };
-  delete userSnapShot.pwHash;
-  delete userSnapShot.session;
-  res.send(JSON.stringify(userSnapShot));
+users.get('/:username', async (req, res) => {
+  res.json(req.locals?.user);
 });
 
-users.delete('/:username', (req, res) => {
-  store.deleteUser(req.user!);
+users.delete('/:username', async (req, res) => {
+  await req.locals?.user!.remove();
   res.send();
 });
 
 users.get('/:username/image-sets/', async (req, res) => {
-  res.send(getJson(req.user!.imageSets));
+  const imageSets = req.locals?.user;
+  res.json(imageSets);
 });
 
 users.post('/:username/image-sets', async (req, res) => {
-  const response = req.user!.addImageSet({ images: [] });
-  if (response.type === 'SUCCESS') {
-    res.send(response.data);
-  } else {
-    res.statusCode = 422;
-    res.send(response.message);
-  }
+  const imageSet = new ImageSet();
+  imageSet.user = req.locals?.user!;
+  await imageSet.save();
+  res.json(imageSet);
 });
 
 users.get('/:username/image-sets/:imageSetId', async (req, res) => {
-  res.send(getJson(req.imageSet!));
+  res.json(req.locals?.imageSet);
 });
 
 users.delete('/:username/image-sets/:imageSetId', async (req, res) => {
-  req.user!.deleteImageSet(req.params.imageSetId);
+  const deleteAllImages = req.locals?.imageSet?.images.map(async (image) => await image.remove())!;
+  await Promise.all(deleteAllImages);
+  await req.locals?.imageSet?.remove();
   res.send();
 });
 
 users.put('/:username/image-sets/:imageSetId', async (req, res) => {
-  const response = req.imageSet!.update(req.body);
-  if (response.type === 'SUCCESS') {
-    res.send(getJson(response.data));
-  } else {
-    res.status(422).send({ error: response.data });
-  }
+  const imageSet = req.locals?.imageSet!;
+  Object.assign(imageSet, req.body);
+  await imageSet.save();
+  res.json(imageSet);
 });
 
 var storage = multer.diskStorage({
   destination: async function (req, file, cb) {
-    const targetPath = `${process.cwd()}/images/${req.user?.imageDirectory}`;
+    const targetPath = `${process.cwd()}/images/${req.locals?.user?.imageDirectory}`;
     if (!fsOld.existsSync(targetPath)) {
       await fs.mkdir(targetPath);
     }
     cb(null, targetPath);
   },
-  filename: function (req, file, cb) {
+  filename: async function (req, file, cb) {
     const fileExtension = path.extname(file.originalname);
-    const uuid = uuid4();
-    const fileName = uuid + fileExtension;
-    const url = `${process.env.BASE_URL}/images/${req.user?.imageDirectory}/${fileName}`;
-    req.imageSet!.addTemporaryImageData({ url });
+    const fileName = uuid4() + fileExtension;
+    const url = `${process.env.BASE_URL}/images/${req.locals?.user?.imageDirectory}/${fileName}`;
+    const image = new Image(url, req.locals?.imageSet!);
+    await image.save();
     cb(null, fileName);
   },
 });
@@ -84,20 +77,15 @@ var storage = multer.diskStorage({
 var upload = multer({ storage });
 
 users.post('/:username/image-sets/:imageSetId/images', upload.array('images'), async (req, res) => {
-  const { imageSet } = req;
-  if (imageSet!.temporaryImageData) {
-    const newImage = imageSet?.addImages(imageSet!.temporaryImageData);
-    imageSet?.resetTemporaryImageData();
-    res.send(newImage);
-  }
+  res.json(await ImageSet.findOne({ id: Number(req.params.imageSetId) }));
 });
 
 users.get('/:username/image-sets/:imageSetId/images/:imageId', async (req, res) => {
-  res.send(getJson(req.image!));
+  res.json(req.locals?.image!);
 });
 
 users.delete('/:username/image-sets/:imageSetId/images/:imageId', async (req, res) => {
-  req.imageSet!.deleteImage(req.image!);
+  await req.locals?.image?.remove();
   res.send();
 });
 

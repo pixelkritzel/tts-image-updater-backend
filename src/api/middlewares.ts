@@ -1,14 +1,17 @@
+import { Session } from './../entity/Session';
 import { NextFunction, Request, Response } from 'express';
 
-import { store } from '../store';
+import { Image } from './../entity/Image';
+import { ImageSet } from './../entity/ImageSet';
+import { User } from './../entity/User';
 
 export async function authenticateUser(req: Request, res: Response, next: NextFunction) {
   const { username: usernameFromParams } = req.params;
-  const sessiontoken = req.headers['session-token'];
-  const sessionByToken = store.activeSessions.get(sessiontoken as string);
-  if (typeof sessiontoken === 'string' && sessionByToken) {
-    if (usernameFromParams === sessionByToken.username && Date.now() < sessionByToken.expires) {
-      store.users.get(sessionByToken.username)?.session!.updateExpires();
+  const sessionToken = req.headers['session-token'] as string;
+  const sessionByToken = await Session.findOne({ sessionToken });
+  if (sessionByToken) {
+    if (usernameFromParams === sessionByToken.user.name && Date.now() < sessionByToken.expires) {
+      sessionByToken.updateExpires();
       return next();
     }
   }
@@ -19,12 +22,13 @@ export async function authenticateUser(req: Request, res: Response, next: NextFu
 export async function resolveUser(req: Request, res: Response, next: NextFunction) {
   const { username } = req.params;
   if (username) {
-    const user = store.users.get(username);
+    const user = await User.findOne({ name: username });
     if (!user) {
       res.statusCode = 404;
       res.send(`Didn't find user ${username}`);
     } else {
-      req.user = user;
+      req.locals = req.locals ?? {};
+      req.locals.user = user;
       next();
     }
   } else {
@@ -37,18 +41,18 @@ export async function resolveImageSet(req: Request, res: Response, next: NextFun
   if (!imageSetId) {
     throw new Error('resolveImageSet middleware was used without a :imageSet in the route');
   }
-  if (!req.user) {
+  if (!req.locals?.user) {
     throw new Error(
       'resolveImageSet middleware was used without a user instance on the request object'
     );
   }
 
-  const imageSet = req.user.imageSets.get(imageSetId);
+  const imageSet = await ImageSet.findOne({ id: Number(imageSetId) });
   if (!imageSet) {
     res.statusCode = 404;
     res.send(`Didn't find image set ${imageSetId}`);
   } else {
-    req.imageSet = imageSet;
+    req.locals.imageSet = imageSet;
     next();
   }
 }
@@ -58,17 +62,17 @@ export async function resolveImage(req: Request, res: Response, next: NextFuncti
   if (!imageId) {
     throw new Error('resolveImageSet middleware was used without a :mageId in the route');
   }
-  if (!req.imageSet) {
+  if (!req.locals?.imageSet) {
     throw new Error(
       'resolveImageSet middleware was used without a imageSet instance on the request object'
     );
   }
-  const image = req.imageSet.images.get(imageId);
+  const image = await Image.findOne({ id: Number(imageId) });
   if (!image) {
     res.statusCode = 404;
     res.send(`Didn't find image ${imageId}`);
   } else {
-    req.image = image;
+    req.locals.image = image;
     next();
   }
 }

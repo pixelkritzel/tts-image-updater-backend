@@ -1,10 +1,13 @@
-import { Iimage, IimageSet } from './../../src/store/imageSet';
-import { Iuser } from '../../src/store/user';
+import { Image } from './../../src/entity/Image';
+import { ImageSet } from './../../src/entity/ImageSet';
+import { User } from './../../src/entity/User';
 
 declare module 'express-serve-static-core' {
   interface Request {
-    image?: Iimage;
-    imageSet?: IimageSet;
-    user?: Iuser;
+    locals?: {
+      image?: Image;
+      imageSet?: ImageSet;
+      user?: User;
+    };
   }
 }
