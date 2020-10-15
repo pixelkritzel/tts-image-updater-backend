@@ -1,4 +1,5 @@
 function rootDirectoryByEnvironment() {
+  console.log(process.env.NODE_ENV);
   return process.env.NODE_ENV === 'production' ? 'dist' : 'src';
 }
 
@@ -11,9 +12,9 @@ module.exports = {
   database: './db/database.db',
   synchronize: true,
   logging: false,
-  entities: [`${rootDirectoryByEnvironment()}/entity/**/*.${extensionByEnvironment()}}`],
-  migrations: [`${rootDirectoryByEnvironment()}/migration/**/*.${extensionByEnvironment()}}`],
-  subscribers: [`${rootDirectoryByEnvironment()}/subscriber/**/*.${extensionByEnvironment()}}`],
+  entities: [`${rootDirectoryByEnvironment()}/entity/**/*.${extensionByEnvironment()}`],
+  migrations: [`${rootDirectoryByEnvironment()}/migration/**/*.${extensionByEnvironment()}`],
+  subscribers: [`${rootDirectoryByEnvironment()}/subscriber/**/*.${extensionByEnvironment()}`],
   cli: {
     entitiesDir: `${rootDirectoryByEnvironment()}/entity`,
     migrationsDir: `${rootDirectoryByEnvironment()}/migration`,
