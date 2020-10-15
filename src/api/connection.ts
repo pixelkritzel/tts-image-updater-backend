@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { reaction } from 'mobx';
+import { when } from 'mobx';
 
 import { ImageSet } from './../entity/ImageSet';
 
@@ -25,7 +25,7 @@ export const connection = router.get('/:imageSetId', async (req, res) => {
       disposer();
       res.send();
     }, 1000);
-    const disposer = reaction(() => trackingMap.get(imageSetId),
+    const disposer = when(() => trackingMap.get(imageSetId)!,
       () => {
         clearTimeout(timeoutId);
         res.send(imageSet.selectedImage.url);
