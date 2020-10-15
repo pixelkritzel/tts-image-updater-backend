@@ -2,17 +2,21 @@ function rootDirectoryByEnvironment() {
   return process.env.NODE_ENV === 'production' ? 'dist' : 'src';
 }
 
+function extensionByEnvironment() {
+  return process.env.NODE_ENV === 'production' ? 'js' : 'ts';
+}
+
 module.exports = {
   type: 'better-sqlite3',
   database: './db/database.db',
   synchronize: true,
   logging: false,
-  entities: [`${rootDirectoryByEnvironment()}/entity/**/*.ts`],
-  migrations: [`${rootDirectoryByEnvironment()}/migration/**/*.ts`],
-  subscribers: [`${rootDirectoryByEnvironment()}/subscriber/**/*.ts`],
+  entities: [`${rootDirectoryByEnvironment()}/entity/**/*.${extensionByEnvironment()}}`],
+  migrations: [`${rootDirectoryByEnvironment()}/migration/**/*.${extensionByEnvironment()}}`],
+  subscribers: [`${rootDirectoryByEnvironment()}/subscriber/**/*.${extensionByEnvironment()}}`],
   cli: {
-    entitiesDir: 'dist/entity',
-    migrationsDir: 'dist/migration',
-    subscribersDir: 'dist/subscriber',
+    entitiesDir: `${rootDirectoryByEnvironment()}/entity`,
+    migrationsDir: `${rootDirectoryByEnvironment()}/migration`,
+    subscribersDir: `${rootDirectoryByEnvironment()}/subscriber`,
   },
 };
