@@ -10,14 +10,14 @@ export const router = express.Router();
 
 export const connection = router.get('/:imageSetId', async (req, res) => {
   const { imageSetId } = req.params;
-  const imageSet = await ImageSet.findOne({ id: Number(imageSetId) })
-  if (!imageSet) {
-    res.statusCode = 404;
-    res.send();
-    return;
-  }
   if (trackingMap.get(imageSetId)) {
     trackingMap.set(imageSetId, false);
+    const imageSet = await ImageSet.findOne({ id: Number(imageSetId) })
+    if (!imageSet) {
+      res.statusCode = 404;
+      res.send();
+      return;
+    }
     res.send(imageSet.selectedImage.url);
   }
   else {
@@ -26,8 +26,14 @@ export const connection = router.get('/:imageSetId', async (req, res) => {
       res.send();
     }, 1000);
     const disposer = when(() => trackingMap.get(imageSetId)!,
-      () => {
+      async () => {
         clearTimeout(timeoutId);
+        const imageSet = await ImageSet.findOne({ id: Number(imageSetId) })
+        if (!imageSet) {
+          res.statusCode = 404;
+          res.send();
+          return;
+        }
         res.send(imageSet.selectedImage.url);
         trackingMap.set(imageSetId, false);
       }
