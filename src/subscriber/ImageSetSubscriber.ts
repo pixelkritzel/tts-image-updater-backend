@@ -4,22 +4,23 @@ import { EntitySubscriberInterface, EventSubscriber, UpdateEvent } from 'typeorm
 
 @EventSubscriber()
 export class ImageSetSubscriber implements EntitySubscriberInterface<ImageSet> {
-  selectedImage?: number;
+  isDirty = false;
 
   listenTo() {
     return ImageSet;
   }
 
   beforeUpdate(event: UpdateEvent<ImageSet>) {
-    this.selectedImage = event.entity.selectedImage.id;
+    this.isDirty = event.entity.selectedImage.id !== event.databaseEntity.selectedImage.id
   }
 
   afterUpdate(event: UpdateEvent<ImageSet>) {
-    queueMicrotask(() =>
+    if (this.isDirty) {
       trackingMap.set(
         event.entity.id.toString(),
-        this.selectedImage !== event.entity.selectedImage.id
-      )
-    );
+        true
+      );
+      this.isDirty = false
+    }
   }
 }

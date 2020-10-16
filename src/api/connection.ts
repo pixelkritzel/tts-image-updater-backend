@@ -1,6 +1,5 @@
-
 import express from 'express';
-import { when } from 'mobx';
+import { autorun } from 'mobx';
 
 import { ImageSet } from './../entity/ImageSet';
 
@@ -10,33 +9,18 @@ export const router = express.Router();
 
 export const connection = router.get('/:imageSetId', async (req, res) => {
   const { imageSetId } = req.params;
-  if (trackingMap.get(imageSetId)) {
-    trackingMap.set(imageSetId, false);
-    const imageSet = await ImageSet.findOne({ id: Number(imageSetId) })
-    if (!imageSet) {
-      res.statusCode = 404;
-      res.send();
-      return;
-    }
-    res.send(imageSet.selectedImage.url);
-  }
-  else {
-    var timeoutId = setTimeout(() => {
+
+  var timeoutId = setTimeout(() => {
+    disposer();
+    res.send();
+  }, 3000);
+  const disposer = autorun(async () => {
+    if (trackingMap.get(imageSetId)) {
       disposer();
-      res.send();
-    }, 1000);
-    const disposer = when(() => trackingMap.get(imageSetId)!,
-      async () => {
-        clearTimeout(timeoutId);
-        const imageSet = await ImageSet.findOne({ id: Number(imageSetId) })
-        if (!imageSet) {
-          res.statusCode = 404;
-          res.send();
-          return;
-        }
-        trackingMap.set(imageSetId, false);
-        res.send(imageSet.selectedImage.url);
-      }
-    )
-  }
+      clearTimeout(timeoutId);
+      const imageSet = await ImageSet.findOne({ id: Number(imageSetId) });
+      trackingMap.set(imageSetId, false);
+      res.send(imageSet?.selectedImage.url);
+    }
+  });
 });
