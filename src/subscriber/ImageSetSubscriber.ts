@@ -11,16 +11,13 @@ export class ImageSetSubscriber implements EntitySubscriberInterface<ImageSet> {
   }
 
   beforeUpdate(event: UpdateEvent<ImageSet>) {
-    this.isDirty = event.entity.selectedImage.id !== event.databaseEntity.selectedImage.id
+    this.isDirty = event.entity.selectedImage.id !== event.databaseEntity.selectedImage.id;
   }
 
   afterUpdate(event: UpdateEvent<ImageSet>) {
     if (this.isDirty) {
-      trackingMap.set(
-        event.entity.id.toString(),
-        true
-      );
-      this.isDirty = false
+      queueMicrotask(() => trackingMap.set(event.entity.id.toString(), true));
+      this.isDirty = false;
     }
   }
 }

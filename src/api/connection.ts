@@ -8,12 +8,12 @@ import { trackingMap } from './../utils/dirtyTracking';
 export const router = express.Router();
 
 export const connection = router.get('/:imageSetId', async (req, res) => {
+  console.log('timestamp:', req.query.timestamp)
   const { imageSetId } = req.params;
-
   var timeoutId = setTimeout(() => {
-    disposer();
+    disposer && disposer();
     res.send();
-  }, 3000);
+  }, 30000);
   const disposer = autorun(async () => {
     if (trackingMap.get(imageSetId)) {
       disposer();
