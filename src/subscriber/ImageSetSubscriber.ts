@@ -15,6 +15,11 @@ export class ImageSetSubscriber implements EntitySubscriberInterface<ImageSet> {
   }
 
   afterUpdate(event: UpdateEvent<ImageSet>) {
-    trackingMap.set(event.entity.id.toString(), this.selectedImage === event.entity.selectedImage.id);
+    queueMicrotask(() =>
+      trackingMap.set(
+        event.entity.id.toString(),
+        this.selectedImage !== event.entity.selectedImage.id
+      )
+    );
   }
 }

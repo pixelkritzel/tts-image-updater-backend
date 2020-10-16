@@ -34,8 +34,8 @@ export const connection = router.get('/:imageSetId', async (req, res) => {
           res.send();
           return;
         }
-        res.send(imageSet.selectedImage.url);
         trackingMap.set(imageSetId, false);
+        res.send(imageSet.selectedImage.url);
       }
     )
   }
